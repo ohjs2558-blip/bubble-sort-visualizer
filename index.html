@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>버블 정렬 시각화 (Bubble Sort Visualizer)</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #38bdf8;
+      --accent: #f59e0b;
+      --compare: #ec4899;
+      --success: #10b981;
+      --border: #334155;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+    .container {
+      width: 100%;
+      max-width: 820px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 2rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+    h1 {
+      font-size: 1.75rem;
+      margin-bottom: 0.5rem;
+      text-align: center;
+      color: var(--primary);
+    }
+    p.desc {
+      text-align: center;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      font-size: 0.95rem;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+    }
+    button {
+      background-color: #334155;
+      color: var(--text);
+      border: 1px solid #475569;
+      border-radius: 8px;
+      padding: 0.6rem 1.1rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    button:hover:not(:disabled) {
+      background-color: #475569;
+      border-color: var(--primary);
+    }
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    button.primary {
+      background-color: #0284c7;
+      border-color: #38bdf8;
+    }
+    button.primary:hover:not(:disabled) {
+      background-color: #0369a1;
+    }
+    .custom-input {
+      display: flex;
+      gap: 0.5rem;
+      width: 100%;
+      margin-top: 0.5rem;
+      justify-content: center;
+    }
+    input[type="text"] {
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.55rem 0.8rem;
+      color: var(--text);
+      width: 320px;
+      font-size: 0.95rem;
+    }
+    .speed-slider {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .visualizer {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      height: 260px;
+      padding: 1rem;
+      background: #0b1120;
+      border-radius: 10px;
+      gap: 12px;
+      margin-bottom: 1.5rem;
+      border: 1px solid #1e293b;
+    }
+    .bar-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      width: 44px;
+      height: 100%;
+      justify-content: flex-end;
+    }
+    .bar {
+      width: 100%;
+      background: #38bdf8;
+      border-radius: 6px 6px 0 0;
+      transition: height 0.2s ease, background-color 0.2s ease;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding-top: 4px;
+      color: #0f172a;
+      font-weight: bold;
+      font-size: 0.85rem;
+    }
+    .bar.comparing {
+      background: var(--compare) !important;
+      color: #ffffff;
+    }
+    .bar.swapping {
+      background: var(--accent) !important;
+      color: #000000;
+    }
+    .bar.sorted {
+      background: var(--success) !important;
+      color: #ffffff;
+    }
+    .bar-label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .status-box {
+      background: #0b1120;
+      border-radius: 8px;
+      padding: 0.9rem 1.2rem;
+      font-family: monospace;
+      font-size: 0.95rem;
+      border-left: 4px solid var(--primary);
+      min-height: 52px;
+      display: flex;
+      align-items: center;
+    }
+    .legend {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-top: 1rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .legend-color {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🫧 버블 정렬 인터랙티브 데모</h1>
+    <p class="desc">기본 데이터: [4, 1, 3, 9, 2, 6, 5, 8] - 버튼으로 정렬 과정을 제어하세요.</p>
+
+    <div class="controls">
+      <button id="btn-play" class="primary">▶ 자동 실행</button>
+      <button id="btn-pause" disabled>⏸ 일시정지</button>
+      <button id="btn-step">⏭ 1단계 실행</button>
+      <button id="btn-reset">↺ 초기화</button>
+      <div class="speed-slider">
+        <label for="speed">속도:</label>
+        <input type="range" id="speed" min="100" max="1500" value="600" step="50">
+      </div>
+    </div>
+
+    <div class="controls custom-input">
+      <input type="text" id="input-arr" value="4, 1, 3, 9, 2, 6, 5, 8" placeholder="쉼표로 구분된 숫자 입력">
+      <button id="btn-apply">배열 적용</button>
+    </div>
+
+    <div class="visualizer" id="visualizer"></div>
+
+    <div class="status-box" id="status">준비 완료. 시작하려면 [자동 실행] 또는 [1단계 실행]을 클릭하세요.</div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-color" style="background:#38bdf8;"></div> 기본</div>
+      <div class="legend-item"><div class="legend-color" style="background:#ec4899;"></div> 비교 중</div>
+      <div class="legend-item"><div class="legend-color" style="background:#f59e0b;"></div> 교환 중</div>
+      <div class="legend-item"><div class="legend-color" style="background:#10b981;"></div> 정렬 완료</div>
+    </div>
+  </div>
+
+  <script>
+    const DEFAULT_ARRAY = [4, 1, 3, 9, 2, 6, 5, 8];
+    let array = [...DEFAULT_ARRAY];
+    let steps = [];
+    let currentStepIdx = 0;
+    let isPlaying = false;
+    let playTimer = null;
+
+    const visualizer = document.getElementById('visualizer');
+    const statusBox = document.getElementById('status');
+    const btnPlay = document.getElementById('btn-play');
+    const btnPause = document.getElementById('btn-pause');
+    const btnStep = document.getElementById('btn-step');
+    const btnReset = document.getElementById('btn-reset');
+    const btnApply = document.getElementById('btn-apply');
+    const inputArr = document.getElementById('input-arr');
+    const speedRange = document.getElementById('speed');
+
+    function generateBubbleSortSteps(initialArr) {
+      const arr = [...initialArr];
+      const n = arr.length;
+      const history = [];
+
+      history.push({
+        type: 'init',
+        array: [...arr],
+        activeIndices: [],
+        sortedIndices: [],
+        message: `초기 배열: [${arr.join(', ')}]`
+      });
+
+      const sortedIndices = new Set();
+
+      for (let i = 0; i < n; i++) {
+        let swapped = false;
+        for (let j = 0; j < n - i - 1; j++) {
+          history.push({
+            type: 'compare',
+            array: [...arr],
+            activeIndices: [j, j + 1],
+            sortedIndices: Array.from(sortedIndices),
+            message: `비교: 인덱스 ${j} (${arr[j]}) 와 ${j + 1} (${arr[j + 1]})`
+          });
+
+          if (arr[j] > arr[j + 1]) {
+            const temp = arr[j];
+            arr[j] = arr[j + 1];
+            arr[j + 1] = temp;
+            swapped = true;
+
+            history.push({
+              type: 'swap',
+              array: [...arr],
+              activeIndices: [j, j + 1],
+              sortedIndices: Array.from(sortedIndices),
+              message: `교환 발생: ${arr[j + 1]} 와 ${arr[j]} 의 위치를 바꿉니다.`
+            });
+          }
+        }
+        sortedIndices.add(n - i - 1);
+        history.push({
+          type: 'pass-done',
+          array: [...arr],
+          activeIndices: [],
+          sortedIndices: Array.from(sortedIndices),
+          message: `${i + 1}회전 종료: 인덱스 ${n - i - 1}의 값(${arr[n - i - 1]})이 확정되었습니다.`
+        });
+        if (!swapped) {
+          for (let k = 0; k < n; k++) sortedIndices.add(k);
+          break;
+        }
+      }
+
+      for (let k = 0; k < n; k++) sortedIndices.add(k);
+      history.push({
+        type: 'done',
+        array: [...arr],
+        activeIndices: [],
+        sortedIndices: Array.from(sortedIndices),
+        message: `🎉 정렬 완료! 최종 배열: [${arr.join(', ')}]`
+      });
+
+      return history;
+    }
+
+    function render(stepData) {
+      const { array: currentArr, activeIndices, sortedIndices, type, message } = stepData;
+      visualizer.innerHTML = '';
+      const maxVal = Math.max(...currentArr, 10);
+
+      currentArr.forEach((val, idx) => {
+        const barContainer = document.createElement('div');
+        barContainer.className = 'bar-container';
+
+        const bar = document.createElement('div');
+        bar.className = 'bar';
+        const heightPercent = Math.max(12, (val / maxVal) * 85);
+        bar.style.height = `${heightPercent}%`;
+        bar.textContent = val;
+
+        if (sortedIndices && sortedIndices.includes(idx)) {
+          bar.classList.add('sorted');
+        } else if (activeIndices && activeIndices.includes(idx)) {
+          if (type === 'swap') bar.classList.add('swapping');
+          else bar.classList.add('comparing');
+        }
+
+        const label = document.createElement('div');
+        label.className = 'bar-label';
+        label.textContent = `[${idx}]`;
+
+        barContainer.appendChild(bar);
+        barContainer.appendChild(label);
+        visualizer.appendChild(barContainer);
+      });
+
+      statusBox.textContent = `[단계 ${currentStepIdx + 1}/${steps.length}] ${message}`;
+    }
+
+    function init() {
+      stopAutoPlay();
+      steps = generateBubbleSortSteps(array);
+      currentStepIdx = 0;
+      render(steps[0]);
+      btnPlay.disabled = false;
+      btnPause.disabled = true;
+      btnStep.disabled = false;
+    }
+
+    function stepForward() {
+      if (currentStepIdx < steps.length - 1) {
+        currentStepIdx++;
+        render(steps[currentStepIdx]);
+        if (currentStepIdx === steps.length - 1) {
+          stopAutoPlay();
+          btnPlay.disabled = true;
+          btnStep.disabled = true;
+        }
+        return true;
+      }
+      return false;
+    }
+
+    function startAutoPlay() {
+      if (currentStepIdx >= steps.length - 1) return;
+      isPlaying = true;
+      btnPlay.disabled = true;
+      btnPause.disabled = false;
+      btnStep.disabled = true;
+
+      const runInterval = () => {
+        const hasNext = stepForward();
+        if (hasNext && isPlaying) {
+          const delay = Number(speedRange.value);
+          playTimer = setTimeout(runInterval, delay);
+        } else {
+          stopAutoPlay();
+        }
+      };
+      playTimer = setTimeout(runInterval, Number(speedRange.value));
+    }
+
+    function stopAutoPlay() {
+      isPlaying = false;
+      if (playTimer) clearTimeout(playTimer);
+      playTimer = null;
+      btnPlay.disabled = (currentStepIdx >= steps.length - 1);
+      btnPause.disabled = true;
+      btnStep.disabled = (currentStepIdx >= steps.length - 1);
+    }
+
+    btnPlay.addEventListener('click', startAutoPlay);
+    btnPause.addEventListener('click', stopAutoPlay);
+    btnStep.addEventListener('click', () => {
+      stopAutoPlay();
+      stepForward();
+    });
+    btnReset.addEventListener('click', init);
+
+    btnApply.addEventListener('click', () => {
+      const raw = inputArr.value;
+      const parsed = raw.split(',').map(s => Number(s.trim())).filter(n => !isNaN(n));
+      if (parsed.length >= 2) {
+        array = parsed;
+        init();
+      } else {
+        alert('최소 2개 이상의 숫자를 쉼표로 구분하여 입력해주세요.');
+      }
+    });
+
+    init();
+  </script>
+</body>
+</html>

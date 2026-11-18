@@ -1,0 +1,30 @@
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Python cache & artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Sensitive & credential files
+*.env
+*.env.*
+*.pem
+*.key
+*.token
+id_rsa
+id_ed25519
+credentials.json
+secrets/
+
+# OS and IDE files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
